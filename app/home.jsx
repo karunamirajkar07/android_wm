@@ -10,6 +10,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function Home() {
   const [waterLevel, setWaterLevel] = useState("Medium");
   const [mode, setMode] = useState("Normal");
+  const [washingProcess, setWashingProcess] = useState("Wash");
+
   const [time, setTime] = useState("00:00");
   const [status, setStatus] = useState("Idle");
 
@@ -63,6 +65,21 @@ export default function Home() {
         ))}
       </View>
 
+      <Text style={styles.sectionTitle}>Washing Process</Text>
+      <View style={styles.row}>
+        {["Wash", "Rinse", "Spin"].map((m) => (
+          <TouchableOpacity
+            key={m}
+            style={[
+              styles.optionBtn,
+              washingProcess === m && styles.activeBtn,
+            ]}
+            onPress={() => setWashingProcess(m)}
+          >
+            <Text style={styles.optionText}>{m}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
       <View style={styles.row}>
         <TouchableOpacity
           style={styles.startBtn}
@@ -107,14 +124,11 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 15,
   },
-   logo: {
+  logo: {
     fontSize: 60,
     textAlign: "center",
     color: "#00E5FF",
     // marginBottom: 5,
-    border: "2px solid #00E5FF",
-    padding: 20,
-    borderRadius: 50,
   },
   card: {
     backgroundColor: "#1c2b36",
