@@ -14,6 +14,16 @@ import { Ionicons } from "@expo/vector-icons";
 
 export default function Login() {
   const [secure, setSecure] = useState(true);
+  const [email, setEmail] = useState("aditya@gmail.com");
+  const [password, setPassword] = useState("pass123");
+
+  const handleLogin = () => {
+   if(email === "aditya@gmail.com" && password === "pass123") {
+    router.push("/home");
+   } else {
+    alert("Invalid credentials. Please try again.");
+   }
+  }
 
   return (
     <LinearGradient
@@ -36,6 +46,8 @@ export default function Login() {
             placeholder="Email"
             placeholderTextColor="#8fa3ad"
             style={styles.input}
+            // value={email}
+  onChangeText={setEmail}
           />
         </View>
 
@@ -47,6 +59,8 @@ export default function Login() {
             placeholderTextColor="#8fa3ad"
             secureTextEntry={secure}
             style={styles.input}
+            // value={password}
+  onChangeText={setPassword}
           />
           <TouchableOpacity onPress={() => setSecure(!secure)}>
             <Ionicons
@@ -64,7 +78,7 @@ export default function Login() {
 
         {/* LOGIN BUTTON */}
         <TouchableOpacity
-          onPress={() => router.push("/home")}
+          onPress={handleLogin}
           style={styles.loginButton}
         >
           <LinearGradient

@@ -14,6 +14,7 @@ export default function Home() {
 
   const [time, setTime] = useState("00:00");
   const [status, setStatus] = useState("Idle");
+  const [isStarted, setIsStarted] = useState(false);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -27,9 +28,16 @@ export default function Home() {
         <Text style={styles.stageText}>Current Stage</Text>
         <Text style={styles.readyText}>Ready</Text>
 
-        <Text style={styles.info}>Water Level: {waterLevel}</Text>
-        <Text style={styles.info}>Mode: {mode}</Text>
-        <Text style={styles.info}>Status: {status}</Text>
+        <View style={styles.row}>
+          <Text style={styles.info}>Water: {waterLevel}</Text>
+          <Text style={styles.info}>Mode: {mode}</Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.info}>Status: {status}</Text>
+          <Text style={styles.info}>Process: {washingProcess}</Text>
+        </View>
+
       </View>
 
       {/* OPTIONS ABOVE */}
@@ -41,8 +49,10 @@ export default function Home() {
             style={[
               styles.optionBtn,
               waterLevel === level && styles.activeBtn,
+              isStarted && { opacity: 0.5 },
             ]}
             onPress={() => setWaterLevel(level)}
+            disabled={isStarted}
           >
             <Text style={styles.optionText}>{level}</Text>
           </TouchableOpacity>
@@ -57,8 +67,10 @@ export default function Home() {
             style={[
               styles.optionBtn,
               mode === m && styles.activeBtn,
+              isStarted && { opacity: 0.5 },
             ]}
             onPress={() => setMode(m)}
+            disabled={isStarted}
           >
             <Text style={styles.optionText}>{m}</Text>
           </TouchableOpacity>
@@ -73,8 +85,10 @@ export default function Home() {
             style={[
               styles.optionBtn,
               washingProcess === m && styles.activeBtn,
+              isStarted && { opacity: 0.5 },
             ]}
             onPress={() => setWashingProcess(m)}
+            disabled={isStarted}
           >
             <Text style={styles.optionText}>{m}</Text>
           </TouchableOpacity>
@@ -86,6 +100,7 @@ export default function Home() {
           onPress={() => {
             setStatus("Running");
             setTime("30:00");
+            setIsStarted(true);
           }}
         >
           <Text style={styles.buttonText}>Start</Text>
@@ -96,6 +111,7 @@ export default function Home() {
           onPress={() => {
             setStatus("Stopped");
             setTime("00:00");
+            setIsStarted(false);
           }}
         >
           <Text style={styles.buttonText}>Stop</Text>
@@ -110,6 +126,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#0f2027",
     padding: 20,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: 5,
   },
   title: {
     fontSize: 24,
