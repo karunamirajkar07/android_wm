@@ -6,6 +6,8 @@ import {
   StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { database } from "../firebaseConfig";
+import { ref, set } from "firebase/database";
 
 export default function Home() {
   const [waterLevel, setWaterLevel] = useState("Medium");
@@ -51,7 +53,11 @@ export default function Home() {
               waterLevel === level && styles.activeBtn,
               isStarted && { opacity: 0.5 },
             ]}
-            onPress={() => setWaterLevel(level)}
+            onPress={() => {
+              setWaterLevel(level)
+              set(ref(database, "washingMachine/water"), level)
+            } 
+            }
             disabled={isStarted}
           >
             <Text style={styles.optionText}>{level}</Text>
@@ -69,7 +75,10 @@ export default function Home() {
               mode === m && styles.activeBtn,
               isStarted && { opacity: 0.5 },
             ]}
-            onPress={() => setMode(m)}
+            onPress={() => {
+              setMode(m)
+              set(ref(database, "washingMachine/mode"), m)
+            }}
             disabled={isStarted}
           >
             <Text style={styles.optionText}>{m}</Text>
@@ -87,7 +96,10 @@ export default function Home() {
               washingProcess === m && styles.activeBtn,
               isStarted && { opacity: 0.5 },
             ]}
-            onPress={() => setWashingProcess(m)}
+            onPress={() => {
+              setWashingProcess(m)
+              set(ref(database, "washingMachine/process"), m)
+            }}
             disabled={isStarted}
           >
             <Text style={styles.optionText}>{m}</Text>
@@ -101,6 +113,7 @@ export default function Home() {
             setStatus("Running");
             setTime("30:00");
             setIsStarted(true);
+            set(ref(database, "washingMachine/status"), "Running")
           }}
         >
           <Text style={styles.buttonText}>Start</Text>
@@ -112,6 +125,7 @@ export default function Home() {
             setStatus("Stopped");
             setTime("00:00");
             setIsStarted(false);
+            set(ref(database, "washingMachine/status"), "Stopped")
           }}
         >
           <Text style={styles.buttonText}>Stop</Text>
