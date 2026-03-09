@@ -2,13 +2,14 @@ const { initializeApp } = require("firebase/app");
 const { getDatabase } = require("firebase/database");
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
+  apiKey: "AIzaSyBvFPpEzaYZSQcI_OxlE4AB1yGNaSIB9Io",
+  authDomain: "iot-washing-machine.firebaseapp.com",
+  projectId: "iot-washing-machine",
   databaseURL: "https://iot-washing-machine-default-rtdb.firebaseio.com/",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  storageBucket: "iot-washing-machine.firebasestorage.app",
+  messagingSenderId: "227575603086",
+  appId: "1:227575603086:web:8983666a459ff73ff44edf",
+  measurementId: "G-3YRZ706L78"
 };
 
 const app = initializeApp(firebaseConfig);
