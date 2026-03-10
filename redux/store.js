@@ -3,6 +3,6 @@ import loginReducer from "./slice/login";
 
 export const store = configureStore ({
     reducer: {
-        updatePassword: loginReducer,
+      login: loginReducer,
       },
 })

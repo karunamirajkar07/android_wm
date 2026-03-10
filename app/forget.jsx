@@ -7,7 +7,7 @@ import { updatePassword } from "../redux/slice/login";
 
 export default function Forgot() {
 
-    const auth = useSelector((state) => state.updatePassword);
+    const auth = useSelector((state) => state.login);
     const [newPassword, setNewPassword] = useState("")
     const [email, setEmail] = useState(auth.email);
     const dispatch = useDispatch();

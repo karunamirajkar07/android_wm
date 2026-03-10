@@ -18,7 +18,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const auth = useSelector((state)=> state.updatePassword)
+  const auth = useSelector((state)=> state.login)
 
   const handleLogin = () => {
    if(email === auth.email && password === auth.password) {
