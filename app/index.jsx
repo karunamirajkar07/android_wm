@@ -11,14 +11,17 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { UseSelector, useSelector } from "react-redux";
 
 export default function Login() {
   const [secure, setSecure] = useState(true);
-  const [email, setEmail] = useState("aditya@gmail.com");
-  const [password, setPassword] = useState("pass123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const auth = useSelector((state)=> state.updatePassword)
 
   const handleLogin = () => {
-   if(email === "aditya@gmail.com" && password === "pass123") {
+   if(email === auth.email && password === auth.password) {
     router.push("/home");
    } else {
     alert("Invalid credentials. Please try again.");
@@ -73,7 +76,10 @@ export default function Login() {
 
         {/* FORGOT PASSWORD */}
         <TouchableOpacity style={styles.forgotContainer}>
-          <Text style={styles.forgotText}>Forgot Password?</Text>
+          <Text 
+          style={styles.forgotText}
+          onPress={() => router.push("/forget")}
+          >Forgot Password?</Text>
         </TouchableOpacity>
 
         {/* LOGIN BUTTON */}
