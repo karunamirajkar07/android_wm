@@ -55,7 +55,14 @@ export default function Home() {
             ]}
             onPress={() => {
               setWaterLevel(level)
-              set(ref(database, "washingMachine/water"), level)
+
+              let levelNumber = 0;
+
+              if(level === "Low") levelNumber = 1;
+              if(level === "Medium") levelNumber = 2;
+              if(level === "High") levelNumber = 3; 
+
+              set(ref(database, "washingMachine/water"), levelNumber)
             }
             }
             disabled={isStarted}
@@ -104,7 +111,13 @@ export default function Home() {
             ]}
             onPress={() => {
               setWashingProcess(m)
-              set(ref(database, "washingMachine/process"), m)
+
+              let processNumber = 0;
+
+              if(m === "Wash") processNumber = 1;
+              if(m === "Rinse") processNumber = 2;
+              if(m === "Spin") processNumber = 3;
+              set(ref(database, "washingMachine/process"), processNumber)
             }}
             disabled={isStarted}
           >
