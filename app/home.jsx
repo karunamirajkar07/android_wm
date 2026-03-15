@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,23 @@ export default function Home() {
   const [time, setTime] = useState("00:00");
   const [status, setStatus] = useState("Idle");
   const [isStarted, setIsStarted] = useState(false);
+
+  useEffect(() => {
+  const washingRef = ref(database, "washingMachine");
+
+  onValue(washingRef, (snapshot) => {
+    const data = snapshot.val();
+
+    if (data) {
+      console.log("Firebase Data:", data);
+
+      setWaterLevel(data.water);
+      setMode(data.mode);
+      setWashingProcess(data.process);
+      setStatus(data.status);
+    }
+  });
+}, []);
 
   return (
     <SafeAreaView style={styles.container}>
