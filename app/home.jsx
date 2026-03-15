@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { database } from "../firebaseConfig";
-import { ref, set } from "firebase/database";
+import { ref, set , onValue } from "firebase/database";
 
 export default function Home() {
   const [waterLevel, setWaterLevel] = useState("Medium");
@@ -27,10 +27,26 @@ export default function Home() {
     if (data) {
       console.log("Firebase Data:", data);
 
-      setWaterLevel(data.water);
-      setMode(data.mode);
-      setWashingProcess(data.process);
-      setStatus(data.status);
+      if (data.status === 1) {
+        setStatus("Running");
+        setIsStarted(true);
+        setTime("30:00");
+      }else{
+        setStatus("Stopped");
+        setIsStarted(false);
+        setTime("00:00");
+      }
+
+      if (data.water === 1) setWaterLevel("Low");
+      if (data.water === 2) setWaterLevel("Medium");
+      if (data.water === 3) setWaterLevel("High");
+      if (data.mode === 1) setMode("Delicate");
+      if (data.mode === 2) setMode("Normal");
+      if (data.mode === 3) setMode("Heavy");
+      if (data.process === 1) setWashingProcess("Wash");
+      if (data.process === 2) setWashingProcess("Rinse");
+      if (data.process === 3) setWashingProcess("Spin");
+
     }
   });
 }, []);
@@ -149,7 +165,7 @@ export default function Home() {
             setStatus("Running");
             setTime("30:00");
             setIsStarted(true);
-            set(ref(database, "washingMachine/status"), "Running")
+            set(ref(database, "washingMachine/status"), 1)
           }}
         >
           <Text style={styles.buttonText}>Start</Text>
@@ -161,7 +177,7 @@ export default function Home() {
             setStatus("Stopped");
             setTime("00:00");
             setIsStarted(false);
-            set(ref(database, "washingMachine/status"), "Stopped")
+            set(ref(database, "washingMachine/status"), 0)
           }}
         >
           <Text style={styles.buttonText}>Stop</Text>
