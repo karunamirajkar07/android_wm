@@ -30,7 +30,7 @@ export default function Home() {
       if (data.status === 1) {
         setStatus("Running");
         setIsStarted(true);
-        setTime("30:00");
+        setTime(data.time || "30:00");
       }else{
         setStatus("Stopped");
         setIsStarted(false);
