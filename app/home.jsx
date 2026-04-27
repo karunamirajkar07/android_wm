@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { database } from "../firebaseConfig";
-import { ref, set, onValue, update,get} from "firebase/database";
+import { ref, set, onValue, update, get } from "firebase/database";
 
 export default function Home() {
   const [waterLevel, setWaterLevel] = useState("Medium");
@@ -64,35 +64,35 @@ export default function Home() {
     return () => unsubscribe();
   }, []);
 
- useEffect(() => {
-  let interval;
+  useEffect(() => {
+    let interval;
 
-  if (isStarted) {
-    interval = setInterval(async () => {
-      const timeRef = ref(database, "washingMachine/time");
+    if (isStarted) {
+      interval = setInterval(async () => {
+        const timeRef = ref(database, "washingMachine/time");
 
-      const snapshot = await get(timeRef);
-      const currentTime = snapshot.val();
+        const snapshot = await get(timeRef);
+        const currentTime = snapshot.val();
 
-      if (currentTime <= 0) {
-        clearInterval(interval);
+        if (currentTime <= 0) {
+          clearInterval(interval);
+
+          await update(ref(database, "washingMachine"), {
+            status: 0,
+            time: 0,
+          });
+
+          return;
+        }
 
         await update(ref(database, "washingMachine"), {
-          status: 0,
-          time: 0,
+          time: currentTime - 1,
         });
+      }, 1000);
+    }
 
-        return;
-      }
-
-      await update(ref(database, "washingMachine"), {
-        time: currentTime - 1,
-      });
-    }, 1000);
-  }
-
-  return () => clearInterval(interval);
-}, [isStarted]);
+    return () => clearInterval(interval);
+  }, [isStarted]);
 
   const formatTime = (seconds) => {
     const min = Math.floor(seconds / 60);
@@ -174,7 +174,7 @@ export default function Home() {
               if (m === "Delicate") modeNumber = 1;
               if (m === "Normal") modeNumber = 2;
               if (m === "Heavy") modeNumber = 3;
-              
+
               update(ref(database, "washingMachine"), {
                 mode: modeNumber,
               });
@@ -240,6 +240,21 @@ export default function Home() {
         >
           <Text style={styles.buttonText}>Stop</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.resetBtn}
+          onPress={async () => {
+            await update(ref(database, "washingMachine"), {
+              status: 0,
+              time: 0,
+              process: 1,
+              water: 2,
+              mode: 2,
+            });
+          }}
+        >
+          <Text style={styles.buttonText}>Reset</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -280,6 +295,13 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 15,
     marginVertical: 15,
+  },
+  resetBtn: {
+    backgroundColor: "#ffaa00",
+    padding: 12,
+    borderRadius: 10,
+    width: 120,
+    alignItems: "center",
   },
   stageText: {
     color: "#aaa",
