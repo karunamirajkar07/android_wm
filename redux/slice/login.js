@@ -4,7 +4,7 @@ const loginSlice = createSlice({
     name:"Login",
     initialState:{
         email: "aditya@gmail.com",
-        password: "pass123",
+        password: "",
       },
     reducers:{
         updatePassword:(state , action)=>{

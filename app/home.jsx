@@ -1,13 +1,8 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { database } from "../firebaseConfig";
-import { ref, set , onValue } from "firebase/database";
+import { ref, set, onValue, update,get} from "firebase/database";
 
 export default function Home() {
   const [waterLevel, setWaterLevel] = useState("Medium");
@@ -18,38 +13,93 @@ export default function Home() {
   const [status, setStatus] = useState("Idle");
   const [isStarted, setIsStarted] = useState(false);
 
+  const PROCESS_TIME_MAP = {
+    1: 1800, // Wash → 30 min
+    2: 2700, // Rinse → 45 min
+    3: 600, // Spin → 10 min
+  };
+
   useEffect(() => {
-  const washingRef = ref(database, "washingMachine");
+    const washingRef = ref(database, "washingMachine");
 
-  onValue(washingRef, (snapshot) => {
-    const data = snapshot.val();
+    const unsubscribe = onValue(washingRef, (snapshot) => {
+      const data = snapshot.val();
 
-    if (data) {
-      console.log("Firebase Data:", data);
+      if (!data) return;
+
+      console.log("Realtime Data:", data);
 
       if (data.status === 1) {
         setStatus("Running");
         setIsStarted(true);
-        setTime(data.time || "30:00");
-      }else{
+        setTime(formatTime(data.time || 0));
+      } else {
         setStatus("Stopped");
         setIsStarted(false);
         setTime("00:00");
       }
 
-      if (data.water === 1) setWaterLevel("Low");
-      if (data.water === 2) setWaterLevel("Medium");
-      if (data.water === 3) setWaterLevel("High");
-      if (data.mode === 1) setMode("Delicate");
-      if (data.mode === 2) setMode("Normal");
-      if (data.mode === 3) setMode("Heavy");
-      if (data.process === 1) setWashingProcess("Wash");
-      if (data.process === 2) setWashingProcess("Rinse");
-      if (data.process === 3) setWashingProcess("Spin");
+      const waterMap = {
+        1: "Low",
+        2: "Medium",
+        3: "High",
+      };
+      setWaterLevel(waterMap[data.water] || "Medium");
 
-    }
-  });
-}, []);
+      const modeMap = {
+        1: "Delicate",
+        2: "Normal",
+        3: "Heavy",
+      };
+      setMode(modeMap[data.mode] || "Normal");
+
+      const processMap = {
+        1: "Wash",
+        2: "Rinse",
+        3: "Spin",
+      };
+      setWashingProcess(processMap[data.process] || "Wash");
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+ useEffect(() => {
+  let interval;
+
+  if (isStarted) {
+    interval = setInterval(async () => {
+      const timeRef = ref(database, "washingMachine/time");
+
+      const snapshot = await get(timeRef);
+      const currentTime = snapshot.val();
+
+      if (currentTime <= 0) {
+        clearInterval(interval);
+
+        await update(ref(database, "washingMachine"), {
+          status: 0,
+          time: 0,
+        });
+
+        return;
+      }
+
+      await update(ref(database, "washingMachine"), {
+        time: currentTime - 1,
+      });
+    }, 1000);
+  }
+
+  return () => clearInterval(interval);
+}, [isStarted]);
+
+  const formatTime = (seconds) => {
+    const min = Math.floor(seconds / 60);
+    const sec = seconds % 60;
+
+    return `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -57,11 +107,12 @@ export default function Home() {
       <Text style={styles.title}>IoT Washing Machine</Text>
       <Text style={styles.timeText}>{time}</Text>
 
-
       <View style={styles.card}>
         <Text style={styles.logo}>≋≋≋</Text>
         <Text style={styles.stageText}>Current Stage</Text>
-        <Text style={styles.readyText}>Ready</Text>
+        <Text style={styles.readyText}>
+          {status === "Running" ? washingProcess : "Ready"}
+        </Text>
 
         <View style={styles.row}>
           <Text style={styles.info}>Water: {waterLevel}</Text>
@@ -69,10 +120,9 @@ export default function Home() {
         </View>
 
         <View style={styles.row}>
-          <Text style={styles.info}>Status: {status}</Text>
           <Text style={styles.info}>Process: {washingProcess}</Text>
+          <Text style={styles.info}>Status: {status}</Text>
         </View>
-
       </View>
 
       {/* OPTIONS ABOVE */}
@@ -87,17 +137,18 @@ export default function Home() {
               isStarted && { opacity: 0.5 },
             ]}
             onPress={() => {
-              setWaterLevel(level)
+              setWaterLevel(level);
 
               let levelNumber = 0;
 
-              if(level === "Low") levelNumber = 1;
-              if(level === "Medium") levelNumber = 2;
-              if(level === "High") levelNumber = 3; 
+              if (level === "Low") levelNumber = 1;
+              if (level === "Medium") levelNumber = 2;
+              if (level === "High") levelNumber = 3;
 
-              set(ref(database, "washingMachine/water"), levelNumber)
-            }
-            }
+              update(ref(database, "washingMachine"), {
+                water: levelNumber,
+              });
+            }}
             disabled={isStarted}
           >
             <Text style={styles.optionText}>{level}</Text>
@@ -116,14 +167,17 @@ export default function Home() {
               isStarted && { opacity: 0.5 },
             ]}
             onPress={() => {
-              setMode(m)
-              
+              setMode(m);
+
               let modeNumber = 0;
 
               if (m === "Delicate") modeNumber = 1;
               if (m === "Normal") modeNumber = 2;
               if (m === "Heavy") modeNumber = 3;
-              set(ref(database, "washingMachine/mode"), modeNumber)
+              
+              update(ref(database, "washingMachine"), {
+                mode: modeNumber,
+              });
             }}
             disabled={isStarted}
           >
@@ -143,14 +197,20 @@ export default function Home() {
               isStarted && { opacity: 0.5 },
             ]}
             onPress={() => {
-              setWashingProcess(m)
+              setWashingProcess(m);
 
               let processNumber = 0;
 
-              if(m === "Wash") processNumber = 1;
-              if(m === "Rinse") processNumber = 2;
-              if(m === "Spin") processNumber = 3;
-              set(ref(database, "washingMachine/process"), processNumber)
+              if (m === "Wash") processNumber = 1;
+              if (m === "Rinse") processNumber = 2;
+              if (m === "Spin") processNumber = 3;
+
+              const time = PROCESS_TIME_MAP[processNumber];
+
+              update(ref(database, "washingMachine"), {
+                process: processNumber,
+                time: time,
+              });
             }}
             disabled={isStarted}
           >
@@ -162,10 +222,9 @@ export default function Home() {
         <TouchableOpacity
           style={styles.startBtn}
           onPress={() => {
-            setStatus("Running");
-            setTime("30:00");
-            setIsStarted(true);
-            set(ref(database, "washingMachine/status"), 1)
+            update(ref(database, "washingMachine"), {
+              status: 1,
+            });
           }}
         >
           <Text style={styles.buttonText}>Start</Text>
@@ -174,10 +233,9 @@ export default function Home() {
         <TouchableOpacity
           style={styles.stopBtn}
           onPress={() => {
-            setStatus("Stopped");
-            setTime("00:00");
-            setIsStarted(false);
-            set(ref(database, "washingMachine/status"), 0)
+            update(ref(database, "washingMachine"), {
+              status: 0,
+            });
           }}
         >
           <Text style={styles.buttonText}>Stop</Text>
