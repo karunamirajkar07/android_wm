@@ -242,7 +242,8 @@ export default function Home() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.resetBtn}
+          style={[styles.resetBtn,isStarted && { opacity: 0.5, cursor : 'not-allowed' }]}
+          disabled={isStarted}
           onPress={async () => {
             await update(ref(database, "washingMachine"), {
               status: 0,
