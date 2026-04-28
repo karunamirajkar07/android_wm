@@ -3,6 +3,9 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { database } from "../firebaseConfig";
 import { ref, set, onValue, update, get } from "firebase/database";
+import * as Notifications from "expo-notifications";
+import { Platform } from "react-native";
+import { useRef } from "react";
 
 export default function Home() {
   const [waterLevel, setWaterLevel] = useState("Medium");
@@ -12,6 +15,8 @@ export default function Home() {
   const [time, setTime] = useState("00:00");
   const [status, setStatus] = useState("Idle");
   const [isStarted, setIsStarted] = useState(false);
+  const notified5Min = useRef(false);
+  const notifiedEnd = useRef(false);
 
   const PROCESS_TIME_MAP = {
     1: 1800, // Wash → 30 min
@@ -19,6 +24,20 @@ export default function Home() {
     3: 600, // Spin → 10 min
   };
 
+  const sendNotification = async (title, body) => {
+    if (Platform.OS === "web") {
+      console.log("Notification (web fallback):", title, body);
+      return;
+    }
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title,
+        body,
+      },
+      trigger: null,
+    });
+  };
   useEffect(() => {
     const washingRef = ref(database, "washingMachine");
 
@@ -32,7 +51,15 @@ export default function Home() {
       if (data.status === 1) {
         setStatus("Running");
         setIsStarted(true);
-        setTime(formatTime(data.time || 0));
+        const seconds = data.time || 0;
+        setTime(formatTime(seconds));
+
+        if (seconds > 300) {
+          notified5Min.current = false;
+        }
+        if (seconds > 0) {
+          notifiedEnd.current = false;
+        }
       } else {
         setStatus("Stopped");
         setIsStarted(false);
@@ -68,25 +95,37 @@ export default function Home() {
     let interval;
 
     if (isStarted) {
-      interval = setInterval(async () => {
-        const timeRef = ref(database, "washingMachine/time");
+      interval = setInterval(() => {
+        setTime((prevTime) => {
+          const [min, sec] = prevTime.split(":").map(Number);
+          let total = min * 60 + sec;
 
-        const snapshot = await get(timeRef);
-        const currentTime = snapshot.val();
+          if (total <= 0) return "00:00";
 
-        if (currentTime <= 0) {
-          clearInterval(interval);
+          total -= 1;
 
-          await update(ref(database, "washingMachine"), {
-            status: 0,
-            time: 0,
-          });
+          if (total <= 300  && total > 299 && !notified5Min.current) {
+            notified5Min.current = true;
+            sendNotification(
+              "5 Minutes Remaining","Washing cycle is about to finish.",
+            );
+          }
 
-          return;
-        }
+          if (total === 0 && !notifiedEnd.current) {
+            notifiedEnd.current = true;
 
-        await update(ref(database, "washingMachine"), {
-          time: currentTime - 1,
+            sendNotification("Washing Complete", "Your laundry is done.");
+
+            update(ref(database, "washingMachine"), {
+              status: 0,
+              time: 0,
+            });
+          }
+
+          const newMin = Math.floor(total / 60);
+          const newSec = total % 60;
+
+          return `${String(newMin).padStart(2, "0")}:${String(newSec).padStart(2, "0")}`;
         });
       }, 1000);
     }
@@ -225,6 +264,7 @@ export default function Home() {
             update(ref(database, "washingMachine"), {
               status: 1,
             });
+            sendNotification("Washing Started", "Your machine has started.");
           }}
         >
           <Text style={styles.buttonText}>Start</Text>
@@ -242,7 +282,10 @@ export default function Home() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.resetBtn,isStarted && { opacity: 0.5, cursor : 'not-allowed' }]}
+          style={[
+            styles.resetBtn,
+            isStarted && { opacity: 0.5, cursor: "not-allowed" },
+          ]}
           disabled={isStarted}
           onPress={async () => {
             await update(ref(database, "washingMachine"), {
