@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffaa00",
     padding: 12,
     borderRadius: 10,
-    width: 120,
+    width: 100,
     alignItems: "center",
   },
   stageText: {
@@ -387,14 +387,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#00e0ff",
     padding: 12,
     borderRadius: 10,
-    width: 120,
+    width: 100,
     alignItems: "center",
   },
   stopBtn: {
     backgroundColor: "#ff4d4d",
     padding: 12,
     borderRadius: 10,
-    width: 120,
+    width: 100,
     alignItems: "center",
   },
   buttonText: {
